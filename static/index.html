@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คัดความสุกกล้วย · Banana Grader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1EC; --panel:#FFFFFF; --ink:#16261C; --muted:#5E6E63; --line:#D5DCD4;
+  --peel:#F2B918; --peel-ink:#2B2200; --ok:#2F7D3B; --bad:#B3402A; --warn:#9A6B00;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#101812;--panel:#18231B;--ink:#E8EFE6;--muted:#9AAA9F;--line:#2A3A2E;--ok:#6CC27A;--bad:#E8806A;--warn:#E8B84A}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Anuphan",system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--peel);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0 14px}
+h1{font-size:1.35rem;margin:0;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.9rem;margin:2px 0 0}
+.seg{flex:none;display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;padding:6px 14px;cursor:pointer;font-weight:500}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.demo{display:none;background:#FFF1C2;color:#5A4300;border:1px solid #E6C85A;border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-size:.92rem}
+.demo.on{display:block}
+
+.grid{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.panel h2{font-size:1rem;margin:0 0 10px;font-weight:600}
+aside .panel+.panel{margin-top:14px}
+
+#drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;min-height:170px;border:2px dashed var(--line);border-radius:var(--r);cursor:pointer;padding:16px;transition:border-color .15s,background .15s}
+#drop.over{border-color:var(--peel);background:color-mix(in srgb,var(--peel) 14%,transparent)}
+#drop strong{font-size:1.05rem}
+#drop span{color:var(--muted);font-size:.88rem}
+#file{position:absolute;opacity:0;pointer-events:none}
+.btn{border:0;border-radius:8px;padding:11px 18px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--peel);color:var(--peel-ink);width:100%;margin-top:12px}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:none;border:1px solid var(--line)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label.chk{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+input[type=text],input[type=number]{width:100%;border:1px solid var(--line);background:transparent;border-radius:8px;padding:8px 10px}
+.field{margin-bottom:10px}
+.field>span{display:block;color:var(--muted);font-size:.85rem;margin-bottom:3px}
+
+/* lot summary — the ripeness strip is the signature element */
+.verdict{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.verdict .big{font-size:2.1rem;font-weight:700;line-height:1.1}
+.pass{color:var(--ok)} .fail{color:var(--bad)}
+.strip{display:flex;height:46px;border-radius:8px;overflow:hidden;margin:16px 0 8px;background:var(--line)}
+.strip div{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85rem;min-width:0;transition:flex-basis .5s}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:560px){.legend{grid-template-columns:repeat(2,1fr)}}
+.legend div{font-size:.88rem}
+.legend b{display:block;font-size:1.25rem}
+.legend small{color:var(--muted)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:18px 0 10px}
+.tools .spacer{flex:1}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:.88rem}
+.pill[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--line)}
+.card .b{padding:10px 12px 12px}
+.name{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res{display:flex;align-items:baseline;justify-content:space-between;margin:4px 0 6px}
+.res b{font-size:1.15rem}
+.bar{display:grid;grid-template-columns:44px 1fr 38px;align-items:center;gap:6px;font-size:.75rem;color:var(--muted);margin:2px 0}
+.bar i{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i u{display:block;height:100%;text-decoration:none}
+.flag{display:inline-block;margin-top:6px;font-size:.78rem;color:var(--warn);font-weight:600}
+.err{color:var(--bad);font-size:.85rem}
+.empty{color:var(--muted);text-align:center;padding:40px 10px}
+.prog{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:10px;display:none}
+.prog.on{display:block}.prog i{display:block;height:100%;width:40%;background:var(--peel);animation:slide 1s infinite ease-in-out}
+@keyframes slide{0%{margin-left:-40%}100%{margin-left:100%}}
+@media(prefers-reduced-motion:reduce){.prog i{animation:none;width:100%}.strip div{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1 data-i18n="title"></h1>
+      <p class="sub" data-i18n="subtitle"></p>
+    </div>
+    <div class="seg" role="group" aria-label="Language">
+      <button data-lang="th" aria-pressed="true">ไทย</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+  <div id="demo" class="demo" role="status" data-i18n="demo"></div>
+
+  <div class="grid">
+    <aside>
+      <div class="panel">
+        <h2 data-i18n="upload"></h2>
+        <label id="drop" for="file" tabindex="0">
+          <strong data-i18n="drop"></strong>
+          <span data-i18n="dropHint"></span>
+        </label>
+        <input id="file" type="file" accept="image/*" multiple>
+        <div id="picked" class="sub" style="margin-top:8px"></div>
+        <button id="go" class="btn primary" disabled data-i18n="analyze"></button>
+        <div id="prog" class="prog"><i></i></div>
+      </div>
+
+      <div class="panel">
+        <h2 data-i18n="spec"></h2>
+        <div class="field"><span data-i18n="customer"></span><input id="cust" type="text" placeholder="เช่น ลูกค้า A / e.g. Customer A"></div>
+        <div class="field"><span data-i18n="accept"></span><div id="accepts"></div></div>
+        <div class="field"><span data-i18n="minShare"></span><input id="minShare" type="number" min="1" max="100" value="90"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="panel" id="summary">
+        <div class="empty" data-i18n="empty"></div>
+      </div>
+      <div id="listWrap" style="display:none">
+        <div class="tools">
+          <div id="filters" class="row"></div>
+          <span class="spacer"></span>
+          <button id="lowOnly" class="pill" aria-pressed="false" data-i18n="lowOnly"></button>
+          <button id="csv" class="btn ghost" data-i18n="csv"></button>
+        </div>
+        <div id="cards" class="cards"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const T = {
+  th:{title:"คัดความสุกกล้วย",subtitle:"อัปโหลดรูปกล้วยจากไลน์ผลิต ดูผลแยกระยะและสรุปทั้งล็อตทันที",
+    upload:"รูปกล้วย",drop:"ลากรูปมาวางที่นี่ หรือแตะเพื่อเลือก",dropHint:"ได้หลายรูป · บนมือถือถ่ายรูปได้เลย · ไม่เกิน 100 รูป",
+    analyze:"วิเคราะห์รูป",analyzing:"กำลังวิเคราะห์…",picked:n=>`เลือกแล้ว ${n} รูป`,
+    spec:"เกณฑ์ของลูกค้า",customer:"ชื่อลูกค้า / ล็อต",accept:"ระยะที่รับได้",minShare:"สัดส่วนที่ผ่านขั้นต่ำ (%)",
+    empty:"ยังไม่มีผล เลือกรูปกล้วยแล้วกด “วิเคราะห์รูป”",
+    pass:"ล็อตผ่านเกณฑ์",fail:"ล็อตไม่ผ่านเกณฑ์",
+    verdictLine:(a,n,m)=>`ผ่านเกณฑ์ ${a} จาก ${n} ลูก (${Math.round(a/n*100)}%) · ต้องการอย่างน้อย ${m}%`,
+    lowOnly:"เฉพาะที่ควรตรวจซ้ำ",csv:"ดาวน์โหลด CSV",all:"ทั้งหมด",
+    low:"ความมั่นใจต่ำ ควรตรวจซ้ำ",badImage:"เปิดไฟล์นี้ไม่ได้ ลองใช้ JPG หรือ PNG",tooMany:"อัปโหลดได้ไม่เกิน 100 รูปต่อครั้ง",
+    netErr:"เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง",
+    demo:"โหมดเดโม: ยังไม่ได้ใส่ไฟล์โมเดลจริง ผลด้านล่างเป็นการประมาณจากสีภาพ ห้ามใช้ตัดสินจริง",
+    unit:"ลูก",total:"ทั้งหมด",cols:["รูป","ระยะ","ความมั่นใจ","ผ่านเกณฑ์","ควรตรวจซ้ำ"],yes:"ผ่าน",no:"ไม่ผ่าน",chk:"ใช่"},
+  en:{title:"Banana Ripeness Grader",subtitle:"Upload photos from the packing line and get ripeness per fruit and a lot-level verdict.",
+    upload:"Banana photos",drop:"Drop photos here, or tap to choose",dropHint:"Multiple files · camera on mobile · up to 100 photos",
+    analyze:"Analyze photos",analyzing:"Analyzing…",picked:n=>`${n} photo${n>1?"s":""} selected`,
+    spec:"Customer spec",customer:"Customer / lot name",accept:"Accepted stages",minShare:"Minimum passing share (%)",
+    empty:"No results yet. Choose banana photos and select “Analyze photos”.",
+    pass:"Lot passes",fail:"Lot fails",
+    verdictLine:(a,n,m)=>`${a} of ${n} fruit within spec (${Math.round(a/n*100)}%) · ${m}% required`,
+    lowOnly:"Needs recheck only",csv:"Download CSV",all:"All",
+    low:"Low confidence, recheck",badImage:"This file can't be opened. Try JPG or PNG.",tooMany:"Up to 100 photos per upload.",
+    netErr:"Can't reach the server. Try again.",
+    demo:"Demo mode: no real model file is loaded. Results are estimated from image colour and must not be used for real decisions.",
+    unit:"fruit",total:"Total",cols:["Photo","Stage","Confidence","In spec","Recheck"],yes:"Yes",no:"No",chk:"Yes"}
+};
+let lang="th", CFG=null, files=[], results=[], filter="all", lowOnly=false;
+const $=s=>document.querySelector(s);
+const cls=i=>CFG.classes[i], nm=i=>cls(i)[lang];
+
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-i18n]").forEach(e=>{const v=T[lang][e.dataset.i18n]; if(typeof v==="string") e.textContent=v;});
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===lang));
+  if(CFG){renderAccepts();} pickedText(); render();
+}
+function pickedText(){$("#picked").textContent=files.length?T[lang].picked(files.length):"";}
+
+function renderAccepts(){
+  const keep=new Set([...document.querySelectorAll("#accepts input:checked")].map(i=>+i.value));
+  const first=!document.querySelector("#accepts input");
+  $("#accepts").innerHTML=CFG.classes.map((c,i)=>
+    `<label class="chk"><input type="checkbox" value="${i}" ${(first?[1,2].includes(i):keep.has(i))?"checked":""}>
+     <span class="dot" style="background:${c.color}"></span>${c[lang]}</label>`).join("");
+  document.querySelectorAll("#accepts input").forEach(i=>i.onchange=render);
+}
+const accepted=()=>new Set([...document.querySelectorAll("#accepts input:checked")].map(i=>+i.value));
+
+function render(){
+  if(!CFG) return;
+  const t=T[lang];
+  if(!results.length){ $("#summary").innerHTML=`<div class="empty">${t.empty}</div>`; $("#listWrap").style.display="none"; return; }
+  const ok=results.filter(r=>!r.error);
+  const acc=accepted(), minS=+$("#minShare").value||0;
+  const counts=CFG.classes.map((_,i)=>ok.filter(r=>r.index===i).length);
+  const inSpec=ok.filter(r=>acc.has(r.index)).length;
+  const passes=ok.length>0 && inSpec/ok.length*100>=minS;
+  const cust=$("#cust").value.trim();
+  $("#summary").innerHTML=`
+    <div class="verdict">
+      <div><div class="big ${passes?"pass":"fail"}">${passes?t.pass:t.fail}</div>
+        <div class="sub">${cust?cust+" · ":""}${ok.length?t.verdictLine(inSpec,ok.length,minS):""}</div></div>
+      <div class="sub" style="text-align:right">${t.total}<br><b style="font-size:1.6rem;color:var(--ink)">${ok.length}</b> ${t.unit}</div>
+    </div>
+    <div class="strip" role="img" aria-label="${CFG.classes.map((c,i)=>c[lang]+" "+counts[i]).join(", ")}">
+      ${CFG.classes.map((c,i)=>counts[i]?`<div style="flex:${counts[i]};background:${c.color};color:${i===3?"#fff":"#1a1a1a"}">${Math.round(counts[i]/ok.length*100)}%</div>`:"").join("")}
+    </div>
+    <div class="legend">${CFG.classes.map((c,i)=>`<div><span class="dot" style="background:${c.color};display:inline-block"></span> ${c[lang]}<b>${counts[i]}</b><small>${c["hint_"+lang]}</small></div>`).join("")}</div>`;
+
+  $("#listWrap").style.display="block";
+  $("#filters").innerHTML=[`<button class="pill" data-f="all" aria-pressed="${filter==="all"}">${t.all} (${results.length})</button>`]
+    .concat(CFG.classes.map((c,i)=>`<button class="pill" data-f="${i}" aria-pressed="${filter===String(i)}">${c[lang]} (${counts[i]})</button>`)).join("");
+  document.querySelectorAll("#filters .pill").forEach(b=>b.onclick=()=>{filter=b.dataset.f;render();});
+  $("#lowOnly").setAttribute("aria-pressed",lowOnly);
+
+  const shown=results.filter(r=>(filter==="all"||String(r.index)===filter)&&(!lowOnly||r.low_confidence||r.error));
+  $("#cards").innerHTML=shown.map(r=>{
+    if(r.error) return `<div class="card"><div class="b"><div class="name">${esc(r.name)}</div><p class="err">${t.badImage}</p></div></div>`;
+    const c=cls(r.index);
+    return `<div class="card"><img src="${r.url}" alt="${esc(r.name)}"><div class="b">
+      <div class="name">${esc(r.name)}</div>
+      <div class="res"><b style="color:${r.index===3?"var(--bad)":"inherit"}"><span class="dot" style="background:${c.color};display:inline-block;margin-right:6px"></span>${c[lang]}</b><span>${(r.confidence*100).toFixed(1)}%</span></div>
+      ${r.probs.map((p,i)=>`<div class="bar"><span>${CFG.classes[i][lang]}</span><i><u style="width:${p*100}%;background:${CFG.classes[i].color}"></u></i><span>${(p*100).toFixed(0)}%</span></div>`).join("")}
+      ${r.low_confidence?`<span class="flag">⚠ ${t.low}</span>`:""}</div></div>`;
+  }).join("");
+}
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+
+function setFiles(list){
+  files=[...list].filter(f=>f.type.startsWith("image/")||/\.(jpe?g|png|webp|bmp|gif)$/i.test(f.name)).slice(0,100);
+  pickedText(); $("#go").disabled=!files.length;
+}
+const drop=$("#drop");
+$("#file").onchange=e=>setFiles(e.target.files);
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>setFiles(e.dataTransfer.files));
+drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("#file").click();}});
+
+$("#go").onclick=async()=>{
+  const btn=$("#go"); btn.disabled=true; btn.textContent=T[lang].analyzing; $("#prog").classList.add("on");
+  try{
+    const fd=new FormData(); files.forEach(f=>fd.append("images",f));
+    const r=await fetch("/api/predict",{method:"POST",body:fd});
+    const j=await r.json();
+    if(!r.ok){alert(j.error==="too_many"?T[lang].tooMany:T[lang].netErr);return;}
+    results=j.results.map((x,i)=>({...x,url:URL.createObjectURL(files[i])}));
+    filter="all"; lowOnly=false; render();
+  }catch(e){alert(T[lang].netErr);}
+  finally{btn.disabled=!files.length;btn.textContent=T[lang].analyze;$("#prog").classList.remove("on");}
+};
+
+$("#csv").onclick=()=>{
+  const t=T[lang], acc=accepted();
+  const rows=[t.cols.concat(CFG.classes.map(c=>c[lang]+" %"))];
+  results.forEach(r=>rows.push(r.error?[r.name,"error","","","",...CFG.classes.map(()=>"")]:
+    [r.name,nm(r.index),(r.confidence*100).toFixed(1),acc.has(r.index)?t.yes:t.no,r.low_confidence?t.chk:"",...r.probs.map(p=>(p*100).toFixed(1))]));
+  const csv="﻿"+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download=`banana-grading-${($("#cust").value.trim()||"lot").replace(/\s+/g,"_")}.csv`; a.click();
+};
+$("#lowOnly").onclick=()=>{lowOnly=!lowOnly;render();};
+$("#minShare").oninput=render; $("#cust").oninput=render;
+document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{lang=b.dataset.lang;applyLang();});
+
+fetch("/api/config").then(r=>r.json()).then(c=>{CFG=c;$("#demo").classList.toggle("on",c.demo);applyLang();});
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "image_size": 224,
+  "low_confidence_threshold": 0.6,
+  "classes": [
+    {"id": "Class A", "key": "unripe",   "th": "ดิบ",        "en": "Unripe",   "color": "#6FA43A", "hint_th": "เขียว ยังแข็ง ต้องบ่มต่อ",   "hint_en": "Green and firm, needs ripening"},
+    {"id": "Class B", "key": "semi",     "th": "ห่าม",       "en": "Semi-ripe","color": "#C9C23A", "hint_th": "เหลืองอมเขียว เหมาะส่งไกล", "hint_en": "Yellow-green, good for long routes"},
+    {"id": "Class C", "key": "ripe",     "th": "สุก",        "en": "Ripe",     "color": "#F2B918", "hint_th": "เหลืองสด พร้อมวางขาย",       "hint_en": "Bright yellow, shelf-ready"},
+    {"id": "Class D", "key": "overripe", "th": "งอม/เน่า",   "en": "Overripe", "color": "#7A4A25", "hint_th": "จุดดำมาก นิ่ม คัดออก",       "hint_en": "Heavily spotted and soft, reject"}
+  ]
+}
